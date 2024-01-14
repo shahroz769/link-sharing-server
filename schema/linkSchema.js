@@ -11,10 +11,6 @@ const linkSchema = new Schema(
                 type: String,
                 required: true,
             },
-            image: {
-                type: String,
-                required: true,
-            },
             placeholder: {
                 type: String,
                 required: true,

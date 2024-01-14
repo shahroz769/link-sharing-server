@@ -12,6 +12,6 @@ router.use("/signup", REGISTRATION);
 router.use("/login", AUTH);
 router.use("/link", checkTokenValidation, LINK);
 router.use("/profile", checkTokenValidation, USER);
-router.use("/share", SHARE)
+router.use("/share", SHARE);
 
 export default router;

@@ -13,7 +13,10 @@ const login = async (req, res) => {
                 message: "All fields are required",
             });
         }
-        const foundUser = await User.findOne({ email }).exec();
+        const searchCriteria = email.includes("@")
+            ? { email }
+            : { userName: email };
+        const foundUser = await User.findOne(searchCriteria).exec();
         if (!foundUser) {
             return res.status(401).json({
                 statusCode: 401,
@@ -38,9 +41,11 @@ const login = async (req, res) => {
             .json({ message: "Success", token, user: foundUser });
     } catch (e) {
         console.error(e);
-        return res
-            .status(500)
-            .json({ message: "Server error while Loging in." });
+        return res.status(500).json({
+            code: 500,
+            message: "Server error while Loging in.",
+            status: false,
+        });
     }
 };
 

@@ -16,7 +16,12 @@ const save = async (req, res) => {
                 const { link, platform, order } = body;
                 const objToSave = {
                     link,
-                    platform,
+                    platform: {
+                        text: platform.text,
+                        placeholder: platform.placeholder,
+                        backgroundColor: platform.backgroundColor,
+                        color: platform.color,
+                    },
                     order,
                 };
                 await linkValidationSchema.validateAsync(objToSave, {
@@ -28,7 +33,10 @@ const save = async (req, res) => {
                 };
             }),
         );
-        await Link.deleteMany({ user: decodedToken.user._id });
+        const currentTime = new Date();
+        await Link.deleteMany({
+            user: decodedToken.user._id,
+        });
         await Link.insertMany(linksToSave);
         return res.status(200).json({
             statusCode: 200,
@@ -61,16 +69,13 @@ const get = async (req, res) => {
                 },
             },
             {
-                $lookup: {
-                    from: "users",
-                    localField: "user",
-                    foreignField: "_id",
-                    as: "linkUser",
-                },
-            },
-            {
                 $project: {
-                    "linkUser.password": 0,
+                    "platform.image": 0,
+                    user: 0,
+                    createdAt: 0,
+                    updatedAt: 0,
+                    __v: 0,
+                    _id: 0,
                 },
             },
         ]);

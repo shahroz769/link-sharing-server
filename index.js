@@ -1,7 +1,6 @@
 import express from "express";
 import chalk from "chalk";
 import "dotenv/config";
-import cookieParser from "cookie-parser";
 import cors from "cors";
 import corsOptions from "./config/corsOptions.js";
 import mongoose from "./config/dbConnect.js";

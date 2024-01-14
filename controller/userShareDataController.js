@@ -5,7 +5,11 @@ const userShareDataController = async (req, res) => {
     try {
         const userName = req.query.userName;
         const foundUser = await User.findOne({ userName });
-        foundUser.password = undefined;
+        if (!foundUser) {
+            return res
+                .status(404)
+                .json({ code: 404, message: "No user found", status: false });
+        }
         const foundLinks = await Link.aggregate([
             {
                 $match: {
