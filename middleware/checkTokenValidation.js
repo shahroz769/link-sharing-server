@@ -1,12 +1,10 @@
-import jwt from "jsonwebtoken";
 import "dotenv/config";
+import jwt from "jsonwebtoken";
+import User from "../schema/userSchema.js";
 
 const checkTokenValidation = async (req, res, next) => {
     try {
-        console.log("Middle Authentication");
         const authorization = req.headers["authorization"];
-        const token = authorization.split(" ")[1];
-        const noUser = jwt.verify(token, process.env.JWT_SECRET);
         if (!authorization) {
             res.clearCookie("jwt");
             return res.status(401).json({
@@ -14,7 +12,18 @@ const checkTokenValidation = async (req, res, next) => {
                 reason: "No token available.",
             });
         }
-        next();
+        const token = authorization.split(" ")[1];
+        const decodedUser = jwt.verify(token, process.env.JWT_SECRET);
+        const isUser = await User.findById(decodedUser.user._id).exec();
+        if (!isUser) {
+            res.clearCookie("jwt");
+            return res.status(401).json({
+                message: "Unauthorized",
+                reason: "No user found with the given token.",
+            });
+        }
+        req.user = isUser;
+        if (authorization && isUser) next();
     } catch (error) {
         console.log(error);
         return res.status(500).json({

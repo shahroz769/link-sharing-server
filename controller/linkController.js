@@ -1,16 +1,10 @@
 import linkValidationSchema from "../schema/linkValidationSchema.js";
 import Link from "../schema/linkSchema.js";
-import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
 const save = async (req, res) => {
     try {
-        console.log("Save Request", req.body);
-        const authorization = req.headers["authorization"];
-        const token = authorization.split(" ")[1];
-        const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-        console.log(decodedToken);
-
+        const userID = req.user._id;
         const linksToSave = await Promise.all(
             req.body.map(async (body) => {
                 const { link, platform, order } = body;
@@ -29,13 +23,13 @@ const save = async (req, res) => {
                 });
                 return {
                     ...objToSave,
-                    user: decodedToken.user._id,
+                    user: userID,
                 };
             }),
         );
         const currentTime = new Date();
         await Link.deleteMany({
-            user: decodedToken.user._id,
+            user: userID,
         });
         await Link.insertMany(linksToSave);
         return res.status(200).json({
@@ -52,11 +46,7 @@ const save = async (req, res) => {
 
 const get = async (req, res) => {
     try {
-        console.log("GETTING LINKS");
-        const authorization = req.headers["authorization"];
-        const token = authorization.split(" ")[1];
-        const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-        const userID = decodedToken.user._id;
+        const userID = req.user._id;
         const foundLinks = await Link.aggregate([
             {
                 $match: {
@@ -79,12 +69,11 @@ const get = async (req, res) => {
                 },
             },
         ]);
-        console.log(foundLinks);
         return res
             .status(200)
             .json({ statusCode: 200, links: foundLinks, status: true });
     } catch (error) {
-        console.log(error.message);
+        console.error(error.message);
         return res.status(500).json({
             statusCode: 500,
             message: error.message || "Internal Server Error",

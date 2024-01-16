@@ -23,7 +23,7 @@ const userValidationSchema = Joi.object({
         /^[^\x00-\x1F\x7F\x80-\xFF\s()<>@,;:"\[\]|ç%&,]+@[a-zA-Z0-9.-]+\.(com|net|co|org)$/u,
     ),
     password: Joi.string()
-        .min(8)
+        .min(6)
         .max(64)
         .pattern(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/)
         .required(),
