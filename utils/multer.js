@@ -1,13 +1,21 @@
 import multer from "multer";
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, "uploads/");
+// Use memory storage for serverless environments like Vercel
+// Files are stored in memory as Buffer objects instead of disk
+const storage = multer.memoryStorage();
+
+const upload = multer({ 
+    storage: storage,
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB limit
     },
-    filename: function (req, file, cb) {
-        cb(null, file.originalname);
-    },
+    fileFilter: (req, file, cb) => {
+        // Accept images only
+        if (!file.mimetype.startsWith('image/')) {
+            return cb(new Error('Only image files are allowed!'), false);
+        }
+        cb(null, true);
+    }
 });
-const upload = multer({ storage: storage });
 
 export default upload;

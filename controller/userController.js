@@ -1,6 +1,5 @@
 import User from "../schema/userSchema.js";
 import cloudinary from "../config/cloudinary.js";
-import fs from "fs";
 import decodeJWT from "../utils/decode.js";
 
 const updateUserDetails = async (req, res) => {
@@ -29,17 +28,39 @@ const updateUserDetails = async (req, res) => {
 
 const saveUserImg = async (req, res) => {
     try {
+        // Check if file was uploaded
+        if (!req.file) {
+            return res.status(400).json({
+                code: 400,
+                message: "No file uploaded",
+                status: false,
+            });
+        }
+
         const userID = req.user._id;
         const foundUser = await User.findById(userID).exec();
+        
         const options = {
             public_id: foundUser._id,
             unique_filename: false,
             overwrite: true,
         };
-        const result = await cloudinary.uploader.upload(req.file.path, options);
-        fs.unlinkSync(req.file.path);
+
+        // Upload to Cloudinary from memory buffer using upload_stream
+        const result = await new Promise((resolve, reject) => {
+            const uploadStream = cloudinary.uploader.upload_stream(
+                options,
+                (error, result) => {
+                    if (error) reject(error);
+                    else resolve(result);
+                }
+            );
+            uploadStream.end(req.file.buffer);
+        });
+
         foundUser.profile = result.secure_url;
         await foundUser.save();
+        
         return res.status(200).json({
             code: 200,
             message: "Image successfully saved",
@@ -48,7 +69,6 @@ const saveUserImg = async (req, res) => {
             status: true,
         });
     } catch (error) {
-        fs.unlinkSync(req.file.path);
         return res
             .status(500)
             .json({ code: 500, message: error.message, status: false });
